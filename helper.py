@@ -27,7 +27,7 @@ FILENAME = "sents.json"
 
 def load_or_download():
     try:
-        return load_data()
+        return load_saved_data()
     except:
         return download_and_save()
 
@@ -46,16 +46,13 @@ def download_text_from_wikipedia():
     text = find_key(data, "extract")
 
     # cleanup headers
-    text = re.sub("==+ [A-Z][\w\s]+ ==+", "", text)
-    text = re.sub("(see[\w\s/]+ )", "", text)
+    text = re.sub(r"==+ [A-Z][\w\s]+ ==+", "", text)
+    text = re.sub(r"(see[\w\s/]+ )", "", text)
     text = text.replace(" (listen); ", "")
 
     # split into sentences
     sents = fix_sents(sent_tokenize(text))
     sents = sents[:-4]
-
-    # tokenize
-    # tokenized = [word_tokenize(s) for s in sents]
 
     res = []
     for sent in sents:
@@ -67,6 +64,10 @@ def download_text_from_wikipedia():
 
 
 def get_terms(input_text):
+    """
+    Given input text, extract search 'terms' made of
+    single words and bigrams, excluding stop words.
+    """
     stop_words = set(stopwords.words("english"))
     tokens = word_tokenize(input_text)
     bigrams = list(zip(tokens, tokens[1:]))
@@ -83,6 +84,9 @@ def get_terms(input_text):
 
 
 def find_key(data, key_name):
+    """
+    Return value of key in dictionary, wherever it is nested
+    """
     if type(data) != dict:
         return
     for key in data.keys():
@@ -95,6 +99,10 @@ def find_key(data, key_name):
 
 
 def fix_sents(sents):
+    """
+    Assume sentences starting with lowercase letters are
+    actually part of the previous sentence, and merge.
+    """
     new_sents = []
     i = 1
     while i < len(sents):
@@ -112,8 +120,7 @@ def fix_sents(sents):
 # ========== SAVE / LOAD ==========
 
 
-def load_data():
-    # print("> Loading data from file...")
+def load_saved_data():
     with open(FILENAME) as f:
         return json.load(f)
 
